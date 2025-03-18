@@ -39,6 +39,11 @@ class PushRelabelMaxFlow:
         
         :param source: Source vertex
         """
+        # Reset height, excess flow
+        self.height = [0] * self.num_vertices
+        self.excess_flow = [0] * self.num_vertices
+        self.flow = [[0] * self.num_vertices for _ in range(self.num_vertices)]
+        
         # Set source height to number of vertices
         self.height[source] = self.num_vertices
         
@@ -86,6 +91,26 @@ class PushRelabelMaxFlow:
         # Increase height of u
         self.height[u] = min_height + 1
     
+    def discharge(self, u: int):
+        """
+        Discharge excess flow from vertex u.
+        
+        :param u: Vertex to discharge
+        """
+        while self.excess_flow[u] > 0:
+            # Try all neighbors
+            flow_pushed = False
+            for v in range(self.num_vertices):
+                # Push if there's residual capacity and u is higher than v
+                if (self.graph[u][v] > self.flow[u][v]) and (self.height[u] > self.height[v]):
+                    self.push(u, v)
+                    flow_pushed = True
+                    break
+            
+            # If no push possible, relabel
+            if not flow_pushed:
+                self.relabel(u)
+    
     def max_flow(self, source: int, sink: int) -> int:
         """
         Compute the maximum flow from source to sink using Push-Relabel algorithm.
@@ -103,33 +128,21 @@ class PushRelabelMaxFlow:
         # Initialize preflow
         self.initialize_preflow(source)
         
-        # Work queue to track overflowing vertices
-        vertices = [v for v in range(self.num_vertices) if v != source and v != sink]
+        # Work queue of overflowing vertices, excluding source and sink
+        work_list = [v for v in range(self.num_vertices) if v != source and v != sink]
         
-        while vertices:
-            u = vertices.pop(0)
+        while work_list:
+            u = work_list.pop(0)
             
-            # If no excess flow, skip
-            if self.excess_flow[u] <= 0:
-                continue
-            
+            # Store old excess to detect change
             old_excess = self.excess_flow[u]
             
-            # Try pushing flow to neighbors
-            for v in range(self.num_vertices):
-                # Push if there's residual capacity and u is higher than v
-                if self.graph[u][v] > self.flow[u][v] and self.height[u] > self.height[v]:
-                    self.push(u, v)
-                
-                # If push reduced excess, put back in queue
-                if self.excess_flow[u] < old_excess:
-                    vertices.append(u)
-                    break
+            # Discharge vertex
+            self.discharge(u)
             
-            # If still has excess, relabel
-            if self.excess_flow[u] > 0:
-                self.relabel(u)
-                vertices.append(u)
+            # If excess changed, reconsider vertex
+            if self.excess_flow[u] > 0 and old_excess == 0:
+                work_list.append(u)
         
-        # Return the flow to the sink
-        return sum(self.flow[source])
+        # Return the total flow to the sink
+        return max(0, sum(self.flow[source]))  # Maximum flow into sink
