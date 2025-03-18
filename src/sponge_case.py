@@ -29,12 +29,16 @@ def to_sponge_case(input_string):
     
     # Convert to sponge case
     result = []
-    capitalize_next = True
+    word_index = 0
     for char in input_string:
         if char.isalpha():
-            result.append(char.upper() if capitalize_next else char.lower())
-            capitalize_next = not capitalize_next
+            # Alternate case within the word
+            result.append(char.upper() if word_index % 2 == 0 else char.lower())
+            word_index += 1
         else:
+            # Reset word index for non-alphabetic characters
             result.append(char)
+            if char.isspace():
+                word_index = 0
     
     return ''.join(result)
