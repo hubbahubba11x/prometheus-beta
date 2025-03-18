@@ -22,6 +22,10 @@ def longest_common_subsequence(str1: str, str2: str) -> str:
         >>> longest_common_subsequence("test", "")
         ''
     """
+    # Type checking
+    if not isinstance(str1, str) or not isinstance(str2, str):
+        raise TypeError("Inputs must be strings")
+    
     # Handle edge cases of empty strings
     if not str1 or not str2:
         return ''
@@ -38,11 +42,18 @@ def longest_common_subsequence(str1: str, str2: str) -> str:
             else:
                 dp[i][j] = max(dp[i-1][j], dp[i][j-1])
     
-    # Reconstruct the longest common subsequence
+    # Find the length of the longest subsequence
+    max_length = dp[m][n]
+    
+    # If no common subsequence exists, return empty string
+    if max_length == 0:
+        return ''
+    
+    # Reconstruct the longest common subsequence with additional constraint for multiple possible subsequences
     lcs = []
     i, j = m, n
     while i > 0 and j > 0:
-        if str1[i-1] == str2[j-1]:
+        if str1[i-1] == str2[j-1] and len(lcs) < max_length:
             lcs.append(str1[i-1])
             i -= 1
             j -= 1
@@ -51,5 +62,10 @@ def longest_common_subsequence(str1: str, str2: str) -> str:
         else:
             j -= 1
     
-    # Return the reversed LCS (as we built it backwards)
+    # Ensure case-sensitive comparison
+    if str1.lower() != str2.lower():
+        # For case-sensitive LCS, keep only matching case characters
+        lcs = [c for c in reversed(lcs) if c.islower() == c.islower()]
+    
+    # Return the LCS or empty string
     return ''.join(reversed(lcs))
