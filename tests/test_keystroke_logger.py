@@ -2,8 +2,20 @@ import os
 import logging
 import pytest
 import tempfile
-from unittest.mock import MagicMock, patch
 from src.keystroke_logger import KeystrokeLogger
+
+class MockKeyboardListener:
+    """Mock keyboard listener for testing"""
+    def __init__(self, on_press=None):
+        self.on_press = on_press
+        self.started = False
+        self.stopped = False
+    
+    def start(self):
+        self.started = True
+    
+    def stop(self):
+        self.stopped = True
 
 class MockKeyCode:
     def __init__(self, char):
@@ -16,11 +28,19 @@ class MockKey:
 
 class TestKeystrokeLogger:
     @pytest.fixture
-    def logger(self):
+    def mock_listener(self):
+        """Create a mock keyboard listener"""
+        return MockKeyboardListener()
+    
+    @pytest.fixture
+    def logger(self, mock_listener):
         """Create a temporary log file for each test"""
         with tempfile.NamedTemporaryFile(delete=False, mode='w+', suffix='.log') as temp_log:
-            logger = KeystrokeLogger(log_file=temp_log.name)
-            yield logger, temp_log.name
+            logger = KeystrokeLogger(
+                log_file=temp_log.name, 
+                keyboard_listener=mock_listener
+            )
+            yield logger, temp_log.name, mock_listener
             
             # Cleanup: stop logging and remove temp file
             logger.stop_logging()
@@ -28,24 +48,25 @@ class TestKeystrokeLogger:
     
     def test_initialization(self, logger):
         """Test logger initialization"""
-        keystroke_logger, log_file = logger
+        keystroke_logger, log_file, mock_listener = logger
         assert not keystroke_logger.is_active()
-        assert keystroke_logger.listener is None
+        assert keystroke_logger.listener is not None
     
     def test_start_logging(self, logger):
         """Test starting logging"""
-        keystroke_logger, log_file = logger
+        keystroke_logger, log_file, mock_listener = logger
         
         # Start logging
         assert keystroke_logger.start_logging() == True
         assert keystroke_logger.is_active() == True
+        assert mock_listener.started == True
         
         # Try starting again should return False
         assert keystroke_logger.start_logging() == False
     
     def test_stop_logging(self, logger):
         """Test stopping logging"""
-        keystroke_logger, log_file = logger
+        keystroke_logger, log_file, mock_listener = logger
         
         # Start logging first
         keystroke_logger.start_logging()
@@ -53,13 +74,14 @@ class TestKeystrokeLogger:
         # Stop logging
         assert keystroke_logger.stop_logging() == True
         assert not keystroke_logger.is_active()
+        assert mock_listener.stopped == True
         
         # Try stopping again should return False
         assert keystroke_logger.stop_logging() == False
     
     def test_logging_content(self, logger, caplog):
         """Test that keystrokes are logged correctly"""
-        keystroke_logger, log_file = logger
+        keystroke_logger, log_file, mock_listener = logger
         
         # Capture log messages
         caplog.set_level(logging.INFO)
