@@ -26,10 +26,6 @@ def build_cartesian_tree(arr: List[T]) -> Optional[CartesianTreeNode]:
     """
     Build a Cartesian Tree from the given array.
     
-    A Cartesian Tree is a binary tree derived from an array such that:
-    1. It is a min-heap based on the value 
-    2. In-order traversal gives the original array
-    
     Args:
         arr: Input list to build the Cartesian Tree from
     
@@ -45,34 +41,37 @@ def build_cartesian_tree(arr: List[T]) -> Optional[CartesianTreeNode]:
     if not arr:
         return None
     
-    # Initialize root with the first element
-    root = CartesianTreeNode(arr[0])
+    # Stack to keep track of nodes
+    stack = []
     
-    # Track the most recently added node
-    current = root
+    for value in arr:
+        node = CartesianTreeNode(value)
+        
+        # While stack is not empty and top of stack is greater than current value
+        while stack and stack[-1].value > value:
+            # The top node becomes left child of the current node
+            last_node = stack.pop()
+            
+            if not stack:
+                node.left = last_node
+            else:
+                # If stack is not empty, put last_node 
+                # between the current node and stack's top
+                if stack[-1].value > value:
+                    node.left = last_node
+                else:
+                    stack[-1].right = last_node
+        
+        # Push current node to stack
+        stack.append(node)
     
-    # Build the Cartesian Tree iteratively
-    for i in range(1, len(arr)):
-        # Create new node for current element
-        node = CartesianTreeNode(arr[i])
-        
-        # If current value is smaller than the current tree node
-        while current and current.value > node.value:
-            # Move up the tree
-            current = current.left
-        
-        # If we've reached the top or found the right insertion point
-        if not current:
-            # New node becomes the root
-            node.left = root
-            root = node
-        else:
-            # Insert new node at the right child position
-            node.left = current.right
-            current.right = node
-        
-        # Update current to the newly added node
-        current = node
+    # The last node in the stack is the root
+    root = stack[0]
+    
+    # Handle cases where right subtree is unbalanced
+    while len(stack) > 1:
+        last_node = stack.pop()
+        stack[-1].right = last_node
     
     return root
 
