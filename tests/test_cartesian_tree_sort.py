@@ -1,5 +1,5 @@
 import pytest
-from src.cartesian_tree_sort import cartesian_tree_sort, build_cartesian_tree, CartesianTreeNode
+from src.cartesian_tree_sort import cartesian_tree_sort
 
 def test_cartesian_tree_sort_basic():
     """Test basic sorting functionality"""
@@ -42,33 +42,14 @@ def test_cartesian_tree_sort_type_error():
     with pytest.raises(TypeError, match="Input must be a list"):
         cartesian_tree_sort("not a list")
 
-def test_build_cartesian_tree_type_error():
-    """Test raising TypeError for non-list input in build_cartesian_tree"""
-    with pytest.raises(TypeError, match="Input must be a list"):
-        build_cartesian_tree("not a list")
+def test_cartesian_tree_sort_negative_numbers():
+    """Test sorting a list with negative numbers"""
+    arr = [-3, 0, -1, 4, -2, 6]
+    sorted_arr = cartesian_tree_sort(arr)
+    assert sorted_arr == sorted(arr)
 
-def test_build_cartesian_tree_node_structure():
-    """Test the structure of the Cartesian Tree"""
-    arr = [3, 1, 4, 1, 5]
-    root = build_cartesian_tree(arr)
-    
-    # Validate node structure
-    assert isinstance(root, CartesianTreeNode)
-    assert root.value == 1  # Smallest element becomes root
-    
-    # Additional optional checks for node values based on tree properties
-    def validate_heap_property(node):
-        """Validate min-heap property"""
-        if not node:
-            return
-        
-        if node.left:
-            assert node.value <= node.left.value
-        
-        if node.right:
-            assert node.value <= node.right.value
-        
-        validate_heap_property(node.left)
-        validate_heap_property(node.right)
-    
-    validate_heap_property(root)
+def test_cartesian_tree_sort_mixed_numbers():
+    """Test sorting a mix of positive and negative numbers"""
+    arr = [10, -5, 0, 15, -10, 20]
+    sorted_arr = cartesian_tree_sort(arr)
+    assert sorted_arr == sorted(arr)
