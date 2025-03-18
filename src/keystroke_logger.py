@@ -1,6 +1,5 @@
 import logging
 import os
-from pynput import keyboard
 
 class KeystrokeLogger:
     """
@@ -10,13 +9,15 @@ class KeystrokeLogger:
     for privacy and control.
     """
     
-    def __init__(self, log_file='keystrokes.log', log_level=logging.INFO):
+    def __init__(self, log_file='keystrokes.log', log_level=logging.INFO, 
+                 keyboard_listener=None):
         """
         Initialize the KeystrokeLogger.
         
         Args:
             log_file (str, optional): Path to the log file. Defaults to 'keystrokes.log'.
             log_level (int, optional): Logging level. Defaults to logging.INFO.
+            keyboard_listener (object, optional): Keyboard listener for testing/mocking.
         """
         # Ensure log directory exists
         os.makedirs(os.path.dirname(log_file) or '.', exist_ok=True)
@@ -28,7 +29,17 @@ class KeystrokeLogger:
             format='%(asctime)s - %(message)s'
         )
         
-        self.listener = None
+        # Import pynput lazily to make testing easier
+        try:
+            from pynput import keyboard
+        except ImportError:
+            keyboard = None
+        
+        # Use injected listener or create a new one
+        self.listener = keyboard_listener if keyboard_listener is not None else (
+            keyboard.Listener(on_press=self._on_press) if keyboard else None
+        )
+        
         self.is_logging = False
     
     def _on_press(self, key):
@@ -56,8 +67,9 @@ class KeystrokeLogger:
         if self.is_logging:
             return False
         
-        self.listener = keyboard.Listener(on_press=self._on_press)
-        self.listener.start()
+        if self.listener:
+            self.listener.start()
+        
         self.is_logging = True
         logging.info("Keystroke logging started")
         return True
@@ -74,7 +86,6 @@ class KeystrokeLogger:
         
         if self.listener:
             self.listener.stop()
-            self.listener = None
         
         self.is_logging = False
         logging.info("Keystroke logging stopped")
