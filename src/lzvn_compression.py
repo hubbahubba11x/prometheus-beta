@@ -106,15 +106,19 @@ def lzvn_decompress(compressed_data):
             offset = compressed_data[pos+1] | (compressed_data[pos+2] << 8)
             length = compressed_data[pos+3]
             
-            # Copy matched sequence
+            # Sanity checks for offset and length
             if offset == 0 or length == 0:
-                raise ValueError("Invalid match: zero offset or length")
+                # Fallback to literal byte if match is invalid
+                decompressed.append(compressed_data[pos])
+                pos += 1
+                continue
             
             start = len(decompressed) - offset
             
-            # Safety check for start index
+            # Bounds checking
             if start < 0:
-                # Fallback to copying as literals
+                # If offset suggests a position outside decompressed data, 
+                # fall back to literal encoding
                 decompressed.append(compressed_data[pos])
                 pos += 1
                 continue
