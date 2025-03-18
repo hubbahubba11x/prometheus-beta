@@ -3,7 +3,7 @@ import logging
 import pytest
 import tempfile
 from unittest.mock import MagicMock, patch
-from ..src.keystroke_logger import KeystrokeLogger
+from src.keystroke_logger import KeystrokeLogger
 
 class MockKeyCode:
     def __init__(self, char):
