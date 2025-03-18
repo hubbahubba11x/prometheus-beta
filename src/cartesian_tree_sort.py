@@ -45,93 +45,34 @@ def build_cartesian_tree(arr: List[T]) -> Optional[CartesianTreeNode]:
     if not arr:
         return None
     
-    # Create a single-linked list to track elements
-    class LinkedNode:
-        def __init__(self, value, index):
-            self.value = value
-            self.index = index
-            self.next = None
+    # Initialize root with the first element
+    root = CartesianTreeNode(arr[0])
     
-    # Create linked list to preserve original indices
-    head = curr = LinkedNode(arr[0], 0)
+    # Track the most recently added node
+    current = root
+    
+    # Build the Cartesian Tree iteratively
     for i in range(1, len(arr)):
-        curr.next = LinkedNode(arr[i], i)
-        curr = curr.next
-    
-    # Sort the linked list
-    def merge_sort(head):
-        # Base cases
-        if not head or not head.next:
-            return head
+        # Create new node for current element
+        node = CartesianTreeNode(arr[i])
         
-        # Split the list
-        slow = fast = head
-        prev = None
-        while fast and fast.next:
-            prev = slow
-            slow = slow.next
-            fast = fast.next.next
+        # If current value is smaller than the current tree node
+        while current and current.value > node.value:
+            # Move up the tree
+            current = current.left
         
-        # Detach the two halves
-        if prev:
-            prev.next = None
-        
-        # Recursively sort both halves
-        left = merge_sort(head)
-        right = merge_sort(slow)
-        
-        # Merge sorted halves
-        dummy = curr = LinkedNode(0, -1)
-        while left and right:
-            if left.value <= right.value:
-                curr.next = left
-                left = left.next
-            else:
-                curr.next = right
-                right = right.next
-            curr = curr.next
-        
-        # Attach remaining nodes
-        curr.next = left if left else right
-        
-        return dummy.next
-    
-    # Sort the linked list while preserving original indices
-    sorted_list = merge_sort(head)
-    
-    # Rebuild array from sorted linked list
-    sorted_arr = []
-    indices = []
-    curr = sorted_list
-    while curr:
-        sorted_arr.append(curr.value)
-        indices.append(curr.index)
-        curr = curr.next
-    
-    # Rebuild Cartesian Tree from sorted array
-    # Use array indices to match original positions
-    stack = []
-    for i, value in enumerate(sorted_arr):
-        # Create the new node
-        node = CartesianTreeNode(value)
-        
-        # Find the last node that is smaller than the current node
-        while stack and sorted_arr[stack[-1].index] > value:
-            stack.pop()
-        
-        # If stack is empty, current node becomes the root
-        if not stack:
-            node.left = None
+        # If we've reached the top or found the right insertion point
+        if not current:
+            # New node becomes the root
+            node.left = root
+            root = node
         else:
-            # Current node becomes right child of the last smaller node
-            node.left = stack[-1].right
-            stack[-1].right = node
+            # Insert new node at the right child position
+            node.left = current.right
+            current.right = node
         
-        # Add current node to stack
-        stack.append(node)
-    
-    # The last node in stack is the root
-    root = stack[0]
+        # Update current to the newly added node
+        current = node
     
     return root
 
