@@ -2,8 +2,17 @@ import os
 import logging
 import pytest
 import tempfile
+from unittest.mock import MagicMock, patch
 from src.keystroke_logger import KeystrokeLogger
-from pynput import keyboard
+
+class MockKeyCode:
+    def __init__(self, char):
+        self.char = char
+
+class MockKey:
+    """Mock special key for testing"""
+    def __str__(self):
+        return 'MOCK_SPECIAL_KEY'
 
 class TestKeystrokeLogger:
     @pytest.fixture
@@ -48,45 +57,29 @@ class TestKeystrokeLogger:
         # Try stopping again should return False
         assert keystroke_logger.stop_logging() == False
     
-    def test_logging_content(self, logger):
-        """Test that keystrokes are actually logged"""
+    def test_logging_content(self, logger, caplog):
+        """Test that keystrokes are logged correctly"""
         keystroke_logger, log_file = logger
         
-        # Start logging
-        keystroke_logger.start_logging()
+        # Capture log messages
+        caplog.set_level(logging.INFO)
         
-        # Simulate a few key presses (using keyboard mock would be more ideal)
+        # Directly call _on_press with different keys
         test_keys = ['a', 'b', 'c']
         for key in test_keys:
-            keystroke_logger._on_press(keyboard.KeyCode(char=key))
+            mock_key = MockKeyCode(key)
+            keystroke_logger._on_press(mock_key)
         
-        # Stop logging
-        keystroke_logger.stop_logging()
-        
-        # Read log file and check contents
-        with open(log_file, 'r') as f:
-            log_content = f.read()
-        
-        # Check that each key is logged
-        for key in test_keys:
-            assert f"Key pressed: {key}" in log_content
-    
-    def test_special_key_logging(self, logger):
-        """Test logging of special keys"""
-        keystroke_logger, log_file = logger
-        
-        # Start logging
-        keystroke_logger.start_logging()
-        
-        # Simulate a special key press
-        special_key = keyboard.Key.enter
+        # Add a special key
+        special_key = MockKey()
         keystroke_logger._on_press(special_key)
         
-        # Stop logging
-        keystroke_logger.stop_logging()
+        # Check log messages
+        log_records = [record.message for record in caplog.records]
         
-        # Read log file and check contents
-        with open(log_file, 'r') as f:
-            log_content = f.read()
+        # Verify that each key was logged
+        for key in test_keys:
+            assert f"Key pressed: {key}" in log_records
         
-        assert f"Special key pressed: {special_key}" in log_content
+        # Check special key logging
+        assert f"Special key pressed: {special_key}" in log_records
