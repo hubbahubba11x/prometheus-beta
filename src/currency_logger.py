@@ -48,5 +48,5 @@ def log_currency_formatted_number(
     else:
         formatted_number = f"{number:,.{decimal_places}f}"
 
-    # Return number with currency symbol
-    return f"{symbol}{formatted_number}"
+    # Return number with currency symbol (with space for unsupported currencies)
+    return f"{currency} {formatted_number}" if currency not in currency_symbols else f"{symbol}{formatted_number}"
