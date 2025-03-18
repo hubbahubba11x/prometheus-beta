@@ -8,23 +8,30 @@ class CartesianTreeNode:
     
     Attributes:
         value: The value stored in the node
+        index: Original index of the value
         left: Left child node
         right: Right child node
     """
-    def __init__(self, value):
+    def __init__(self, value, index):
         """
         Initialize a Cartesian Tree Node.
         
         Args:
             value: The value to be stored in the node
+            index: Original index of the value
         """
         self.value = value
+        self.index = index
         self.left = None
         self.right = None
 
 def build_cartesian_tree(arr: List[T]) -> Optional[CartesianTreeNode]:
     """
     Build a Cartesian Tree from the given array.
+    
+    A Cartesian Tree is a binary tree derived from an array such that:
+    1. It is a min-heap based on the value 
+    2. In-order traversal gives the original array
     
     Args:
         arr: Input list to build the Cartesian Tree from
@@ -41,34 +48,38 @@ def build_cartesian_tree(arr: List[T]) -> Optional[CartesianTreeNode]:
     if not arr:
         return None
     
-    # Stack to keep track of nodes
-    stack = []
+    # Nodes for each element with their original indices
+    nodes = [CartesianTreeNode(val, i) for i, val in enumerate(arr)]
     
-    for value in arr:
-        node = CartesianTreeNode(value)
-        
-        # While stack is not empty and top of stack is greater than current value
-        while stack and stack[-1].value > value:
-            # The top node becomes left child of the current node
+    # Track the root node
+    root = nodes[0]
+    
+    # Track the stack of nodes to build the tree
+    stack = [root]
+    
+    # Iterate through the rest of the nodes
+    for node in nodes[1:]:
+        # Find the appropriate parent for the current node
+        while stack and (stack[-1].value > node.value or 
+                         (stack[-1].value == node.value and stack[-1].index > node.index)):
             last_node = stack.pop()
             
+            # If stack becomes empty, the last node becomes the left child
             if not stack:
                 node.left = last_node
             else:
-                # If stack is not empty, put last_node 
-                # between the current node and stack's top
-                if stack[-1].value > value:
+                # If the stack's top is still larger, set last_node as left child
+                if stack[-1].value > node.value or \
+                   (stack[-1].value == node.value and stack[-1].index > node.index):
                     node.left = last_node
                 else:
+                    # Otherwise, attach last_node as right child
                     stack[-1].right = last_node
         
         # Push current node to stack
         stack.append(node)
     
-    # The last node in the stack is the root
-    root = stack[0]
-    
-    # Handle cases where right subtree is unbalanced
+    # Handle any remaining nodes in the stack
     while len(stack) > 1:
         last_node = stack.pop()
         stack[-1].right = last_node
