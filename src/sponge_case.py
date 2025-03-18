@@ -28,7 +28,13 @@ def to_sponge_case(input_string):
         return ""
     
     # Convert to sponge case
-    return ''.join(
-        char.upper() if i % 2 == 0 else char.lower() 
-        for i, char in enumerate(input_string)
-    )
+    result = []
+    capitalize_next = True
+    for char in input_string:
+        if char.isalpha():
+            result.append(char.upper() if capitalize_next else char.lower())
+            capitalize_next = not capitalize_next
+        else:
+            result.append(char)
+    
+    return ''.join(result)
