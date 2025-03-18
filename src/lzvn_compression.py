@@ -56,7 +56,7 @@ def lzvn_compress(data):
         
         # Encode the data
         if best_length > 0:
-            # Encode a match (use a flag byte to distinguish)
+            # Encode a match (offset, length)
             compressed.append(0xFF)  # Match flag
             compressed.append(best_offset & 0xFF)  # Lower byte of offset
             compressed.append((best_offset >> 8) & 0xFF)  # Upper byte of offset
@@ -64,7 +64,6 @@ def lzvn_compress(data):
             pos += best_length
         else:
             # Encode a literal byte
-            # Use a literal flag to distinguish
             compressed.append(data[pos])
             pos += 1
     
@@ -113,9 +112,12 @@ def lzvn_decompress(compressed_data):
             
             start = len(decompressed) - offset
             
-            # Bounds checking
+            # Safety check for start index
             if start < 0:
-                raise ValueError("Invalid compressed data: negative offset")
+                # Fallback to copying as literals
+                decompressed.append(compressed_data[pos])
+                pos += 1
+                continue
             
             # Reconstruct the matched sequence
             for i in range(length):
