@@ -33,8 +33,16 @@ def log_parameters(logger=None):
             
             # Create a log message with parameter details
             param_log_str = f"Calling {func.__name__} with parameters:"
-            for param_name, param_value in bound_arguments.arguments.items():
-                param_log_str += f"\n  {param_name}: {repr(param_value)}"
+            
+            # Handle kwargs specifically to expand them
+            if 'kwargs' in bound_arguments.arguments:
+                kwargs_dict = bound_arguments.arguments['kwargs']
+                for param_name, param_value in kwargs_dict.items():
+                    param_log_str += f"\n  {param_name}: {repr(param_value)}"
+            else:
+                # Normal case for regular arguments
+                for param_name, param_value in bound_arguments.arguments.items():
+                    param_log_str += f"\n  {param_name}: {repr(param_value)}"
             
             # Log the parameters
             logger.info(param_log_str)
