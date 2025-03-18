@@ -31,25 +31,22 @@ def log_currency_formatted_number(
     if decimal_places < 0:
         raise ValueError("Decimal places must be non-negative")
 
-    # Set up locale for currency formatting
-    try:
-        # Map currency to locale settings
-        currency_locales = {
-            'USD': 'en_US.UTF-8',
-            'EUR': 'de_DE.UTF-8',
-            'GBP': 'en_GB.UTF-8',
-            'JPY': 'ja_JP.UTF-8'
-        }
-        
-        # Use specified locale or default to USD
-        locale_setting = currency_locales.get(currency, 'en_US.UTF-8')
-        locale.setlocale(locale.LC_ALL, locale_setting)
-        
-        # Format the number with specified decimal places
-        formatted_number = locale.currency(number, grouping=True, symbol=True, 
-                                           decimal_digits=decimal_places)
-        
-        return formatted_number
-    except locale.Error:
-        # Fallback to basic formatting if locale is not supported
-        return f"{currency} {number:.{decimal_places}f}"
+    # Currency symbol mapping
+    currency_symbols = {
+        'USD': '$',
+        'EUR': '€',
+        'GBP': '£',
+        'JPY': '¥'
+    }
+
+    # Get symbol or use currency code if not found
+    symbol = currency_symbols.get(currency, currency)
+
+    # Format the number with comma separators and specified decimal places
+    if decimal_places == 0:
+        formatted_number = f"{number:,.0f}"
+    else:
+        formatted_number = f"{number:,.{decimal_places}f}"
+
+    # Return number with currency symbol
+    return f"{symbol}{formatted_number}"
