@@ -1,5 +1,4 @@
 import pytest
-import locale
 from src.currency_logger import log_currency_formatted_number
 
 def test_default_usd_formatting():
@@ -15,8 +14,8 @@ def test_different_currencies():
     gbp = log_currency_formatted_number(1234.56, 'GBP')
     
     assert '$' in usd
-    assert '€' in eur or 'EUR' in eur
-    assert '£' in gbp or 'GBP' in gbp
+    assert '€' in eur
+    assert '£' in gbp
 
 def test_decimal_places():
     """Test different decimal place configurations."""
@@ -50,4 +49,4 @@ def test_invalid_inputs():
 def test_unsupported_currency():
     """Test handling of unsupported currency."""
     result = log_currency_formatted_number(1234.56, 'XYZ')
-    assert 'XYZ 1234.56' in result
+    assert 'XYZ 1,234.56' in result
