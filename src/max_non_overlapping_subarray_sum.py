@@ -37,24 +37,37 @@ def max_non_overlapping_subarray_sum(arr):
     if len(arr) <= 2:
         return max(0, sum(arr))
     
-    # Initialize dynamic programming array
-    # dp[i] represents the max non-overlapping sum up to index i
-    dp = [0] * len(arr)
+    # Initialize dynamic programming arrays
+    # total[i] tracks best way to include subset of first i elements
+    # subset[i] tracks if a subset was used just before this index
+    total = [0] * len(arr)
+    subset = [False] * len(arr)
     
-    # First two elements
-    dp[0] = max(0, arr[0])
-    dp[1] = max(0, max(arr[0], arr[1]), dp[0] + arr[1])
+    # First element
+    total[0] = max(0, arr[0])
+    subset[0] = total[0] > 0
     
-    # Iterate through the array
+    # Second element 
+    total[1] = max(0, total[0], arr[1], total[0] + arr[1])
+    subset[1] = total[1] > total[0]
+    
+    # Fill DP tables
     for i in range(2, len(arr)):
-        # Three choices:
-        # 1. Skip current element
-        # 2. Take current element + max sum two indices before
-        # 3. Take current element and start new subarray
-        dp[i] = max(
-            dp[i-1],  # skip current
-            dp[i-2] + max(0, arr[i]),  # take current with previous non-overlapping
-            max(0, arr[i])  # or just current
-        )
+        # Two main strategies:
+        # 1. Skip this element and continue previous best
+        skip = total[i-1]
+        
+        # 2. Try creating a new subset ending at current index
+        # If previous subset was not used, we can use this new subset
+        new_subset_from_prev = (not subset[i-2]) * (total[i-2] + max(0, arr[i]))
+        
+        # 3. New best isolated subset at this index
+        best_subset = max(0, arr[i])
+        
+        # Combine strategies
+        total[i] = max(skip, new_subset_from_prev, best_subset)
+        
+        # Track if a subset was used
+        subset[i] = (total[i] > total[i-1]) and (total[i] > best_subset)
     
-    return dp[-1]
+    return total[-1]
