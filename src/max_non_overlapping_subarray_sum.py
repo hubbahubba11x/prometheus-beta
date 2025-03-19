@@ -34,9 +34,9 @@ def max_non_overlapping_subarray_sum(arr):
     if not all(isinstance(x, int) for x in arr):
         raise ValueError("All elements must be integers")
     
-    # If array has only one element, return it
+    # If array has only one element, return max of 0 and the element
     if len(arr) == 1:
-        return arr[0]
+        return max(0, arr[0])
     
     # Dynamic programming approach
     # dp[i] represents the maximum sum of non-overlapping subarrays up to index i
@@ -45,14 +45,15 @@ def max_non_overlapping_subarray_sum(arr):
     
     # If second element exists, take max of first two
     if len(arr) > 1:
-        dp[1] = max(dp[0], arr[1], arr[0] + arr[1])
+        dp[1] = max(dp[0], arr[1], max(dp[0], 0) + arr[1])
     
     # Iterate through the array starting from third element
     for i in range(2, len(arr)):
-        # Two choices:
+        # Three choices:
         # 1. Skip current element (take previous max)
         # 2. Take current element + max sum up to two indices before
-        dp[i] = max(dp[i-1], dp[i-2] + arr[i], arr[i])
+        # 3. Start a new subarray at current element
+        dp[i] = max(dp[i-1], dp[i-2] + max(arr[i], 0), max(arr[i], 0))
     
     # Return the maximum sum
     return dp[-1]
