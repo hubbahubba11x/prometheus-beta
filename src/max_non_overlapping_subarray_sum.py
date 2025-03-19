@@ -2,8 +2,7 @@ def max_non_overlapping_subarray_sum(arr):
     """
     Find the maximum sum of a non-overlapping subarray in the given array of integers.
     
-    A non-overlapping subarray is a contiguous part of the array that does not share 
-    any elements with other selected subarrays.
+    This function aims to select non-overlapping subarrays that maximize the total sum.
     
     Args:
         arr (list): A list of integers.
@@ -34,26 +33,38 @@ def max_non_overlapping_subarray_sum(arr):
     if not all(isinstance(x, int) for x in arr):
         raise ValueError("All elements must be integers")
     
-    # If array has only one element, return max of 0 and the element
+    # Special case for single element array
     if len(arr) == 1:
         return max(0, arr[0])
     
-    # Dynamic programming approach
-    # dp[i] represents the maximum sum of non-overlapping subarrays up to index i
-    dp = [0] * len(arr)
-    dp[0] = max(0, arr[0])
+    # Special case for two elements
+    if len(arr) == 2:
+        return max(0, max(arr[0], arr[1]), sum(arr))
     
-    # If second element exists, take max of first two
-    if len(arr) > 1:
-        dp[1] = max(dp[0], arr[1], max(dp[0], 0) + arr[1])
+    # Track the best non-overlapping sum
+    best_sum = 0
     
-    # Iterate through the array starting from third element
+    # Initialize dynamic programming arrays
+    incl = [0] * len(arr)  # max sum including current element
+    excl = [0] * len(arr)  # max sum excluding current element
+    
+    # First value
+    incl[0] = max(0, arr[0])
+    excl[0] = 0
+    
+    # Second value with special handling
+    incl[1] = max(arr[1], incl[0])
+    excl[1] = incl[0]
+    
+    # Fill DP tables
     for i in range(2, len(arr)):
-        # Three choices:
-        # 1. Skip current element (take previous max)
-        # 2. Take current element + max sum up to two indices before
-        # 3. Start a new subarray at current element
-        dp[i] = max(dp[i-1], dp[i-2] + max(arr[i], 0), max(arr[i], 0))
+        # Two choices for including current:
+        # 1. Add current to sum excluding previous
+        # 2. Consider current element itself
+        incl[i] = max(excl[i-2] + arr[i], arr[i], max(0, incl[i-1]))
+        
+        # Excluding means taking previous best
+        excl[i] = max(incl[i-1], excl[i-1])
     
-    # Return the maximum sum
-    return dp[-1]
+    # Return max of last two entries 
+    return max(0, incl[-1], excl[-1])
